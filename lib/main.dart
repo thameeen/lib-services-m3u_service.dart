@@ -42,52 +42,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'Movies';
   String serverUrl = 'http://example.com:8080/get.php?username=...';
 
-  // نافذة الإعدادات لتغيير سيرفر البث
+  // نافذة إعدادات فخمة ومتكاملة
   void _openSettings() {
     TextEditingController urlController = TextEditingController(text: serverUrl);
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         backgroundColor: const Color(0xFF121A17),
-        title: const Text('إعدادات السيرفر (IPTV Settings)', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('أدخل رابط ملف M3U أو بيانات Xtream API:', style: TextStyle(color: Colors.grey, fontSize: 13)),
-            const SizedBox(height: 10),
-            TextField(
-              controller: urlController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFF070A09),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF00FF66))),
-                hintText: 'http://...',
-                hintStyle: const TextStyle(color: Colors.grey),
-              ),
-            ),
-          ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+        child: Container(
+          width: 600,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.settings, color: Color(0xFF00FF66), size: 28),
+                  SizedBox(width: 12),
+                  Text('إعدادات النظام - Heedar TV', style: TextStyle(color: Color(0xFF00FF66), fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(color: Colors.grey, height: 25),
+              
+              const Text('رابط سيرفر البث (Xtream API / M3U):', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: urlController,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF070A09),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF00FF66))),
+                  hintText: 'http://...',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Text('معلومات الجهاز:', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 5),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF070A09),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Device ID: 345678', style: TextStyle(color: Colors.white, fontSize: 12)),
+                    Text('Mac Address: AA:BB:CC:DD:EE', style: TextStyle(color: Colors.white, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 25),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00FF66),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        serverUrl = urlController.text;
+                      });
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تم حفظ إعدادات السيرفر بنجاح!'), duration: Duration(seconds: 2)),
+                      );
+                    },
+                    child: const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66), foregroundColor: Colors.black),
-            onPressed: () {
-              setState(() {
-                serverUrl = urlController.text;
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تم حفظ وتحديث السيرفر بنجاح!'), duration: Duration(seconds: 2)),
-              );
-            },
-            child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -98,6 +143,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF121A17),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
+        ),
         title: const Text('بحث عن قناة أو فيلم', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
         content: TextField(
           style: const TextStyle(color: Colors.white),
