@@ -3,6 +3,11 @@ import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // إجبار التطبيق على العمل بالوضع الأفقي حصراً للشاشات والأجهزة اللوحية
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const HeedarTVApp());
 }
@@ -27,120 +32,143 @@ class HeedarTVApp extends StatelessWidget {
   }
 }
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // متغير لتحديد القسم النشط عند الضغط بالريموت أو النقر
+  String selectedCategory = 'Movies';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // الشريط العلوي
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'HEEDAR TV',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF00FF66),
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF121A17),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.5)),
-                      ),
-                      child: const Text(
-                        'Free Trial - 5 Days Left',
-                        style: TextStyle(color: Color(0xFF00FF66), fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {}),
-                    IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: () {}),
-                    IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () {}),
-                  ],
-                )
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // الأقسام الرئيسية (Live TV, Movies, Series)
-            Row(
-              children: [
-                Expanded(flex: 2, child: Row(
-                  children: [
-                    _buildCategoryCard('Live TV\'s', '+5000 Channels', Icons.tv, false),
-                    const SizedBox(width: 15),
-                    _buildCategoryCard('Movies', '+12000 Movies', Icons.movie, true), // محدد بالإطار الأخضر
-                    const SizedBox(width: 15),
-                    _buildCategoryCard('Series', '+7000 Series', Icons.video_library, false),
-                  ],
-                )),
-                const SizedBox(width: 20),
-                Expanded(
-                  flex: 1,
-                  child: Column(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // الشريط العلوي
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      _buildSideCard('Favorites', '422 Items', Icons.favorite),
-                      const SizedBox(height: 10),
-                      _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play),
+                      const Text(
+                        'HEEDAR TV',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00FF66),
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121A17),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.5)),
+                        ),
+                        child: const Text(
+                          'Free Trial - 5 Days Left',
+                          style: TextStyle(color: Color(0xFF00FF66), fontSize: 11),
+                        ),
+                      ),
                     ],
                   ),
-                )
-              ],
-            ),
-            const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {}),
+                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: () {}),
+                      IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () {}),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
 
-            // قسم متابعة المشاهدة
-            const Text(
-              'Continue Watching',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              children: [
-                _buildContinueItem('Dark City Chronicles', 'Season 2 - Episode 8'),
-                const SizedBox(width: 15),
-                _buildContinueItem('La Casa De Papel', 'Season 4 - Episode 3'),
-                const SizedBox(width: 15),
-                _buildContinueItem('Lilo & Stitch', '2023'),
-              ],
-            ),
-            const Spacer(),
+              // الأقسام الرئيسية (قابلة للضغط والاستجابة)
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Row(
+                      children: [
+                        Expanded(child: _buildCategoryCard('Live TV\'s', '+5000 Channels', Icons.tv, 'LiveTV')),
+                        const SizedBox(width: 15),
+                        Expanded(child: _buildCategoryCard('Movies', '+12000 Movies', Icons.movie, 'Movies')),
+                        const SizedBox(width: 15),
+                        Expanded(child: _buildCategoryCard('Series', '+7000 Series', Icons.video_library, 'Series')),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        _buildSideCard('Favorites', '422 Items', Icons.favorite),
+                        const SizedBox(height: 10),
+                        _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
 
-            // الشريط السفلي ومعلومات الجهاز
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Device ID: 345678    Device PIN: 307654', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                Text('11:46 PM - Fri, Feb 20', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            )
-          ],
+              // قسم متابعة المشاهدة
+              const Text(
+                'Continue Watching',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _buildContinueItem('Dark City Chronicles', 'Season 2 - Episode 8')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _buildContinueItem('La Casa De Papel', 'Season 4 - Episode 3')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _buildContinueItem('Lilo & Stitch', '2023')),
+                ],
+              ),
+              const Spacer(),
+
+              // الشريط السفلي ومعلومات الجهاز
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Device ID: 345678    Device PIN: 307654', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                  Text('11:46 PM - Fri, Feb 20', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCategoryCard(String title, String subtitle, IconData icon, bool isSelected) {
-    return Expanded(
+  // بطاقة الأقسام مع تفعيل خاصية النقر والاستجابة
+  Widget _buildCategoryCard(String title, String subtitle, IconData icon, String categoryKey) {
+    bool isSelected = selectedCategory == categoryKey;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          selectedCategory = categoryKey;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تم الانتقال إلى قسم: $title'), duration: const Duration(milliseconds: 800)),
+        );
+      },
       child: Container(
-        height: 150,
+        height: 130,
         decoration: BoxDecoration(
           color: const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(16),
@@ -155,11 +183,11 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF00FF66), size: 36),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Icon(icon, color: const Color(0xFF00FF66), size: 32),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 11)),
           ],
         ),
       ),
@@ -167,32 +195,36 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildSideCard(String title, String subtitle, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121A17),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF00FF66), size: 24),
-          const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            ],
-          ),
-        ],
+    return InkWell(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121A17),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF00FF66), size: 22),
+            const SizedBox(width: 15),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildContinueItem(String title, String sub) {
-    return Expanded(
+    return InkWell(
+      onTap: () {},
       child: Container(
-        height: 100,
+        height: 85,
         decoration: BoxDecoration(
           color: const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(10),
@@ -202,7 +234,7 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
             Text(sub, style: const TextStyle(color: Colors.grey, fontSize: 10)),
             const SizedBox(height: 6),
