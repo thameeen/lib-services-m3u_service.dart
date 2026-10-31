@@ -40,100 +40,158 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'Movies';
-  String serverUrl = 'http://example.com:8080/get.php?username=...';
+  
+  // متغيرات إعدادات الـ IPTV الاحترافية
+  final TextEditingController _urlController = TextEditingController(text: 'http://');
+  final TextEditingController _userController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+  String loginType = 'Xtream API';
 
-  // نافذة إعدادات فخمة ومتكاملة
+  // نافذة الإعدادات الاحترافية الشاملة
   void _openSettings() {
-    TextEditingController urlController = TextEditingController(text: serverUrl);
-    
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF121A17),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
-        ),
-        child: Container(
-          width: 600,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => Dialog(
+          backgroundColor: const Color(0xFF121A17),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
+          ),
+          child: Container(
+            width: 650,
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.settings, color: Color(0xFF00FF66), size: 28),
-                  SizedBox(width: 12),
-                  Text('إعدادات النظام - Heedar TV', style: TextStyle(color: Color(0xFF00FF66), fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const Divider(color: Colors.grey, height: 25),
-              
-              const Text('رابط سيرفر البث (Xtream API / M3U):', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: urlController,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFF070A09),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF00FF66))),
-                  hintText: 'http://...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              const Text('معلومات الجهاز:', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              const SizedBox(height: 5),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF070A09),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Device ID: 345678', style: TextStyle(color: Colors.white, fontSize: 12)),
-                    Text('Mac Address: AA:BB:CC:DD:EE', style: TextStyle(color: Colors.white, fontSize: 12)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                  const Row(
+                    children: [
+                      Icon(Icons.settings, color: Color(0xFF00FF66), size: 26),
+                      SizedBox(width: 10),
+                      Text('إعدادات حساب الـ IPTV الاحترافية', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00FF66),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  const Divider(color: Colors.grey, height: 20),
+
+                  // اختيار نوع الاتصال
+                  const Text('طريقة الاتصال (Login Type):', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildRadioOption('Xtream API', loginType == 'Xtream API', () {
+                        setStateDialog(() => loginType = 'Xtream API');
+                      }),
+                      const SizedBox(width: 20),
+                      _buildRadioOption('M3U Playlist URL', loginType == 'M3U Playlist URL', () {
+                        setStateDialog(() => loginType = 'M3U Playlist URL');
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+
+                  // حقول الإدخال حسب نوع الاتصال
+                  if (loginType == 'Xtream API') ...[
+                    _buildTextField('اسم السيرفر أو الرابط (URL):', _urlController, 'http://provider.com:8080'),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField('اسم المستخدم (Username):', _userController, 'Username')),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildTextField('كلمة المرور (Password):', _passController, 'Password', obscure: true)),
+                      ],
                     ),
-                    onPressed: () {
-                      setState(() {
-                        serverUrl = urlController.text;
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تم حفظ إعدادات السيرفر بنجاح!'), duration: Duration(seconds: 2)),
-                      );
-                    },
-                    child: const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ] else ...[
+                    _buildTextField('رابط ملف M3U الكامل:', _urlController, 'http://provider.com/get.php?username=...&password=...'),
+                  ],
+
+                  const SizedBox(height: 15),
+                  const Text('معلومات الجهاز:', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                  const SizedBox(height: 5),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF070A09),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Device ID: 345678', style: TextStyle(color: Colors.white, fontSize: 11)),
+                        Text('Mac Address: AA:BB:CC:DD:EE', style: TextStyle(color: Colors.white, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // الأزرار
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00FF66),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('تم حفظ بيانات السيرفر وجاري الاتصال بنجاح!'), duration: Duration(seconds: 2)),
+                          );
+                        },
+                        child: const Text('تسجيل الدخول / حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRadioOption(String title, bool selected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: const Color(0xFF00FF66), size: 18),
+          const SizedBox(width: 6),
+          Text(title, style: const TextStyle(color: Colors.white, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, String hint, {bool obscure = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          obscureText: obscure,
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF070A09),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF00FF66))),
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ],
     );
   }
 
