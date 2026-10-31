@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // إجبار التطبيق على العمل بالوضع الأفقي حصراً للشاشات والأجهزة اللوحية
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
@@ -40,8 +39,86 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // متغير لتحديد القسم النشط عند الضغط بالريموت أو النقر
   String selectedCategory = 'Movies';
+  String serverUrl = 'http://example.com:8080/get.php?username=...';
+
+  // نافذة الإعدادات لتغيير سيرفر البث
+  void _openSettings() {
+    TextEditingController urlController = TextEditingController(text: serverUrl);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF121A17),
+        title: const Text('إعدادات السيرفر (IPTV Settings)', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('أدخل رابط ملف M3U أو بيانات Xtream API:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: urlController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFF070A09),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF00FF66))),
+                hintText: 'http://...',
+                hintStyle: const TextStyle(color: Colors.grey),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66), foregroundColor: Colors.black),
+            onPressed: () {
+              setState(() {
+                serverUrl = urlController.text;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم حفظ وتحديث السيرفر بنجاح!'), duration: Duration(seconds: 2)),
+              );
+            },
+            child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // نافذة البحث
+  void _openSearch() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF121A17),
+        title: const Text('بحث عن قناة أو فيلم', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+        content: TextField(
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF070A09),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            hintText: 'اكتب اسم المحتوى للبحث...',
+            hintStyle: const TextStyle(color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Color(0xFF00FF66)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +161,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Row(
                     children: [
-                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {}),
-                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: () {}),
-                      IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () {}),
+                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
+                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري تحديث البيانات...')));
+                      }),
+                      IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
                     ],
                   )
                 ],
               ),
               const SizedBox(height: 20),
 
-              // الأقسام الرئيسية (قابلة للضغط والاستجابة)
+              // الأقسام الرئيسية
               Row(
                 children: [
                   Expanded(
@@ -113,9 +192,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     flex: 1,
                     child: Column(
                       children: [
-                        _buildSideCard('Favorites', '422 Items', Icons.favorite),
+                        _buildSideCard('Favorites', '422 Items', Icons.favorite, () {}),
                         const SizedBox(height: 10),
-                        _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play),
+                        _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play, () {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Current Playlist: Global Heedar Mix')));
+                        }),
                       ],
                     ),
                   )
@@ -155,7 +236,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // بطاقة الأقسام مع تفعيل خاصية النقر والاستجابة
   Widget _buildCategoryCard(String title, String subtitle, IconData icon, String categoryKey) {
     bool isSelected = selectedCategory == categoryKey;
     return InkWell(
@@ -194,9 +274,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSideCard(String title, String subtitle, IconData icon) {
+  Widget _buildSideCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
