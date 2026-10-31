@@ -24,6 +24,13 @@ jobs:
           flutter-version: '3.19.0'
           channel: 'stable'
 
+      - name: Create Full Flutter Project Structure
+        run: |
+          flutter create . --org com.heedartv.app --project-name heedar_tv --platforms=android
+          mkdir -p lib
+          # نسخ ملف الواجهة الذي وضعناه إذا كان موجوداً، أو تخطيه
+          if [ -f "lib/main.dart" ]; then echo "Main exists"; fi
+
       - name: Get Dependencies
         run: flutter pub get
 
