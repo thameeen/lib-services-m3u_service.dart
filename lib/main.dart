@@ -514,6 +514,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       ..initialize().then((_) {
         setState(() {
           _isInitialized = true;
+          _controller.setLooping(true);
           _controller.play();
         });
       });
@@ -533,10 +534,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         alignment: Alignment.center,
         children: [
           _isInitialized
-              ? Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
+              ? SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
+                    ),
                   ),
                 )
               : const Center(
