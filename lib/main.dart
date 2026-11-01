@@ -43,7 +43,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     text: 'https://rckestxy.xyz:80',
   );
 
-  // نافذة الإعدادات المتقدمة لإدخال السيرفر
   void _openSettings() {
     showDialog(
       context: context,
@@ -97,7 +96,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // نافذة البحث السريع
   void _openSearch() {
     showDialog(
       context: context,
@@ -150,7 +148,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الشريط العلوي الاحترافي
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -189,8 +186,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 15),
-
-              // الأقسام الكبرى للتحكم (Live TV, Movies, Series)
               Row(
                 children: [
                   Expanded(child: _buildMainCategoryCard('Live TV', 'البث المباشر', Icons.tv, 'LiveTV')),
@@ -201,15 +196,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // عنوان القائمة
               Text(
                 selectedMainTab == 'LiveTV' ? 'قنوات البث المباشر المتاحة:' : 'مكتبة المحتوى والوسائط:',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
-
-              // شبكة المحتوى
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
@@ -264,22 +255,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<Widget> _getMediaListForTab() {
+    // استخدام روابط بث حقيقية ومستقرة ومباشرة (HLS Streams)
     if (selectedMainTab == 'LiveTV') {
       return [
-        _buildChannelCard('قناة الرياضة الحية 1 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
-        _buildChannelCard('قناة الرياضة الحية 2 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
-        _buildChannelCard('قناة الأخبار العالمية [FHD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
-        _buildChannelCard('قناة المنوعات العامة [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+        _buildChannelCard('قناة البث الحي الأولى [Live HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
+        _buildChannelCard('قناة الرياضة العالمية [Live HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
+        _buildChannelCard('قناة الأخبار المباشرة [Live FHD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
+        _buildChannelCard('قناة المنوعات العامة [Live HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
       ];
     } else if (selectedMainTab == 'Movies') {
       return [
-        _buildChannelCard('فيلم الحركة والمغامرة [4K]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
-        _buildChannelCard('فيلم الكوميديا والدراما [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        _buildChannelCard('فيلم الحركة والمغامرة [VOD 4K]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
+        _buildChannelCard('فيلم الكوميديا والدراما [VOD HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
       ];
     } else {
       return [
-        _buildChannelCard('مسلسل الحلقة الأولى [Ep 1]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
-        _buildChannelCard('مسلسل الحلقة الثانية [Ep 2]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+        _buildChannelCard('مسلسل الحلقة الأولى [Series HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
+        _buildChannelCard('مسلسل الحلقة الثانية [Series HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
       ];
     }
   }
@@ -371,7 +363,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 aspectRatio: _controller.value.aspectRatio,
                 child: VideoPlayer(_controller),
               )
-            : const CircularProgressIndicator(color: Color(0xFF00FF66)),
+            : const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF00FF66)),
+                  SizedBox(height: 15),
+                  Text('جاري الاتصال بسيرفر البث...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                ],
+              ),
       ),
     );
   }
