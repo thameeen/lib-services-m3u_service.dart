@@ -62,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      // في حال خطأ الاتصال، سيعتمد التطبيق على البيانات الافتراضية بسلاسة
+      // الاعتماد على البيانات الافتراضية في حال وجود أي عائق بالاتصال
     }
   }
 
@@ -248,7 +248,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // قائمة Continue Watching الافتراضية والجاهزة دائماً لمنع أي تعليق أو انتظار
     List continueWatching = serverData?['continue_watching'] ?? [
       {
         "title": "Dark City Chronicles",
@@ -452,26 +451,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(10),
-          image: DecorationImage(
-            image: NetworkImage(posterUrl),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.darken),
-          ),
         ),
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Stack(
           children: [
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 2),
-            Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
-            const SizedBox(height: 6),
-            LinearProgressIndicator(
-              value: 0.6,
-              backgroundColor: Colors.black54,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
-            )
+            // صورة البستر الخلفية مع معالجة الأخطاء
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  posterUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF121A17)),
+                ),
+              ),
+            ),
+            // طبقة تظليل سوداء لضمان وضوح النصوص فوق الصورة
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black.withOpacity(0.65),
+                ),
+              ),
+            ),
+            // محتوى النصوص ومؤشر التقدم
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: 0.6,
+                    backgroundColor: Colors.black54,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
+                  )
+                ],
+              ),
+            ),
           ],
         ),
       ),
