@@ -1,10 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
 void main() {
-  runApp(const HeedarTVApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  // فرض فتح التطبيق بالوضع الأفقي فقط (Landscape)
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const HeedarTVApp());
+  });
 }
 
 class HeedarTVApp extends StatelessWidget {
@@ -547,6 +555,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    // التأكد من أن المشغل يعمل بالعرض الأفقي وملء الشاشة
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
         setState(() {
@@ -558,6 +572,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
+    // إعادة السماح بالاتجاهات الأخرى عند الخروج من الشاشة إذا لزم الأمر
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _controller.dispose();
     super.dispose();
   }
