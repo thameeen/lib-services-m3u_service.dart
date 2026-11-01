@@ -48,16 +48,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     "notice": "Free Trial - 5 Days Left",
     "continue_watching": [
       {
+        "title": "Live Sports / News Stream",
+        "subtitle": "Live TV 24/7 (HLS Stream)",
+        "progress": 1.0,
+        // رابط بث مباشر حقيقي ومعتمد (HLS Stream)
+        "video_url": "https://live-hls-web-aja.getaj.net/AJA/index.m3u8"
+      },
+      {
         "title": "Dark City Chronicles",
         "subtitle": "Season 2 - Episode 8",
         "progress": 0.6,
         "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      },
-      {
-        "title": "La Casa De Papel",
-        "subtitle": "Season 4 - Episode 3",
-        "progress": 0.4,
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
       },
       {
         "title": "Lilo & Stitch",
@@ -341,7 +342,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Continue Watching',
+                'Continue Watching / Live Stream',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
@@ -468,7 +469,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: const Color(0xFF00FF66).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text('HD', style: TextStyle(color: Color(0xFF00FF66), fontSize: 9, fontWeight: FontWeight.bold)),
+                  child: const Text('LIVE', style: TextStyle(color: Color(0xFF00FF66), fontSize: 9, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -506,20 +507,34 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
+    _initializeVideo();
+  }
+
+  void _initializeVideo() async {
+    try {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      await _controller.initialize();
+      if (mounted) {
         setState(() {
           _isInitialized = true;
-          _controller.setLooping(true);
-          _controller.play();
+          _hasError = false;
         });
-      }).catchError((error) {
-        debugPrint("Error initializing video: $error");
-      });
+        _controller.setLooping(true);
+        _controller.play();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isInitialized = false;
+        });
+      }
+    }
   }
 
   @override
@@ -535,16 +550,42 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          _isInitialized && _controller.value.isInitialized
-              ? Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  ),
-                )
-              : const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF00FF66)),
+          if (_hasError)
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                const SizedBox(height: 10),
+                const Text('عذراً، تعذر تشغيل بث هذا الرابط المباشر', style: TextStyle(color: Colors.white, fontSize: 14)),
+                const SizedBox(height: 15),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66), foregroundColor: Colors.black),
+                  onPressed: () {
+                    setState(() {
+                      _hasError = false;
+                      _isInitialized = false;
+                    });
+                    _initializeVideo();
+                  },
+                  child: const Text('إعادة المحاولة'),
                 ),
+              ],
+            )
+          else if (_isInitialized && _controller.value.isInitialized)
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
+                ),
+              ),
+            )
+          else
+            const Center(
+              child: CircularProgressIndicator(color: Color(0xFF00FF66)),
+            ),
           Positioned(
             top: 20,
             left: 20,
