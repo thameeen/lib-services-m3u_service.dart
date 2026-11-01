@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'video_player_screen.dart';
 import '../services/m3u_service.dart';
