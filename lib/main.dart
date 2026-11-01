@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +42,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
 
-  // بيانات السيرفر المحلية المستقرة تماماً (Local Server Data)
   final Map<String, dynamic> serverData = {
     "app_name": "Heedar TV",
     "version": "1.0.0",
@@ -51,16 +51,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "title": "Dark City Chronicles",
         "subtitle": "Season 2 - Episode 8",
         "progress": 0.6,
+        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
       },
       {
         "title": "La Casa De Papel",
         "subtitle": "Season 4 - Episode 3",
         "progress": 0.4,
+        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
       },
       {
         "title": "Lilo & Stitch",
         "subtitle": "2023",
         "progress": 0.8,
+        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
       }
     ]
   };
@@ -241,6 +244,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _playVideo(String title, String videoUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoPlayerScreen(title: title, videoUrl: videoUrl),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     List continueWatching = serverData['continue_watching'];
@@ -343,7 +355,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: _buildContinueItem(item['title'], item['subtitle'], item['progress']),
+                      child: _buildContinueItem(
+                        item['title'], 
+                        item['subtitle'], 
+                        item['progress'],
+                        () => _playVideo(item['title'], item['video_url']),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -429,20 +446,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildContinueItem(String title, String sub, double progress) {
+  Widget _buildContinueItem(String title, String sub, double progress, VoidCallback onTap) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         height: 95,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          // تصميم تدرجات نيون فخمة بديلة للصور تضمن استقرار المظهر وثباته بصرياً
           gradient: const LinearGradient(
             colors: [Color(0xFF121A17), Color(0xFF0B2618), Color(0xFF070A09)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.2), width: 1),
+          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.3), width: 1.5),
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -452,7 +468,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.movie_creation_outlined, color: Color(0xFF00FF66), size: 20),
+                const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 22),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
@@ -479,6 +495,91 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class VideoPlayerScreen extends StatefulWidget {
+  final String title;
+  final String videoUrl;
+
+  const VideoPlayerScreen({super.key, required this.title, required this.videoUrl});
+
+  @override
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+}
+
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+      ..initialize().then((_) {
+        setState(() {
+          _isInitialized = true;
+          _controller.play();
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          _isInitialized
+              ? Center(
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  ),
+                )
+              : const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF00FF66)),
+                ),
+          Positioned(
+            top: 20,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                Text(
+                  widget.title,
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: Icon(
+                    _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: const Color(0xFF00FF66),
+                    size: 28,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
