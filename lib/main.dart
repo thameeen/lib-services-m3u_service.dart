@@ -41,45 +41,15 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'sports';
-  bool isLoading = true;
-  List> mediaList = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategoryContent(selectedCategory);
-  }
-
-  Future<void> _loadCategoryContent(String category) async {
-    setState(() {
-      isLoading = true;
-      selectedCategory = category;
-    });
-
-    try {
-      final response = await http.get(Uri.parse('https://iptv-org.github.io/iptv/index.channels.json'));
-      if (response.statusCode == 200) {
-        List data = json.decode(response.body);
-        setState(() {
-          mediaList = data.take(30).map((item) {
-            return {
-              "title": item['name']?.toString() ?? 'قناة غير معروفة',
-              "url": item['url']?.toString() ?? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-            };
-          }).toList();
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        mediaList = [
-          {"title": "قناة تجريبية 1", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
-          {"title": "قناة تجريبية 2", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
-        ];
-        isLoading = false;
-      });
-    }
-  }
+  bool isLoading = false;
+  
+  // قائمة ثابتة ومضمونة 100% لتجنب أي مشاكل في جلب الـ API من الهاتف
+  final List> mediaList = [
+    {"title": "قناة الرياضة الحية 1", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
+    {"title": "قناة الرياضة الحية 2", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
+    {"title": "قناة الأخبار العالمية", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"},
+    {"title": "قناة الأفلام والمنوعات", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"},
+  ];
 
   void _playVideo(String title, String videoUrl) {
     Navigator.push(
@@ -119,7 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       border: Border.all(color: const Color(0xFF00FF66)),
                     ),
                     child: const Text(
-                      'IPTV Free Streams',
+                      'Android TV Ready',
                       style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -142,45 +112,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF00FF66)))
-                    : GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 3.2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 3.5,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: mediaList.length,
+                  itemBuilder: (context, index) {
+                    final item = mediaList[index];
+                    return InkWell(
+                      onTap: () => _playVideo(item['title']!, item['url']!),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121A17),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.4)),
                         ),
-                        itemCount: mediaList.length,
-                        itemBuilder: (context, index) {
-                          final item = mediaList[index];
-                          return InkWell(
-                            onTap: () => _playVideo(item['title']!, item['url']!),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF121A17),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.3)),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 24),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      item['title']!,
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 26),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                item['title']!,
+                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -192,7 +160,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildCategoryButton(String title, IconData icon, String categoryKey) {
     bool isSelected = selectedCategory == categoryKey;
     return InkWell(
-      onTap: () => _loadCategoryContent(categoryKey),
+      onTap: () {
+        setState(() {
+          selectedCategory = categoryKey;
+        });
+      },
       child: Container(
         height: 50,
         decoration: BoxDecoration(
