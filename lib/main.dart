@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,41 +40,30 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
-  Map<String, dynamic>? serverData;
-  bool isRefreshing = false;
 
-  // رابط السيرفر السحابي الخاص بك على GitHub
-  final String serverJsonUrl = 'https://raw.githubusercontent.com/thameeen/lib-services-m3u_service.dart/refs/heads/main/heedar_server.json';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchServerData();
-  }
-
-  // دالة جلب البيانات وتحديث الشاشة بفعالية عند الضغط على زر التحديث
-  Future<void> _fetchServerData() async {
-    setState(() => isRefreshing = true);
-    try {
-      final response = await http.get(Uri.parse('$serverJsonUrl?t=${DateTime.now().millisecondsSinceEpoch}'));
-      if (response.statusCode == 200) {
-        setState(() {
-          serverData = json.decode(response.body);
-          isRefreshing = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم تحديث البيانات من السيرفر بنجاح!'), duration: Duration(seconds: 1)),
-        );
-      } else {
-        setState(() => isRefreshing = false);
+  // بيانات السيرفر المحلية المستقرة تماماً (Local Server Data)
+  final Map<String, dynamic> serverData = {
+    "app_name": "Heedar TV",
+    "version": "1.0.0",
+    "notice": "Free Trial - 5 Days Left",
+    "continue_watching": [
+      {
+        "title": "Dark City Chronicles",
+        "subtitle": "Season 2 - Episode 8",
+        "progress": 0.6,
+      },
+      {
+        "title": "La Casa De Papel",
+        "subtitle": "Season 4 - Episode 3",
+        "progress": 0.4,
+      },
+      {
+        "title": "Lilo & Stitch",
+        "subtitle": "2023",
+        "progress": 0.8,
       }
-    } catch (e) {
-      setState(() => isRefreshing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر الاتصال بالسيرفر، يتم استخدام النسخة المحلية'), duration: Duration(seconds: 1)),
-      );
-    }
-  }
+    ]
+  };
 
   final TextEditingController _urlController = TextEditingController(text: 'http://');
   final TextEditingController _userController = TextEditingController();
@@ -256,23 +243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List continueWatching = serverData?['continue_watching'] ?? [
-      {
-        "title": "Dark City Chronicles",
-        "subtitle": "Season 2 - Episode 8",
-        "poster_url": "https://picsum.photos/seed/movie1/500/300"
-      },
-      {
-        "title": "La Casa De Papel",
-        "subtitle": "Season 4 - Episode 3",
-        "poster_url": "https://picsum.photos/seed/movie2/500/300"
-      },
-      {
-        "title": "Lilo & Stitch",
-        "subtitle": "2023",
-        "poster_url": "https://picsum.photos/seed/movie3/500/300"
-      }
-    ];
+    List continueWatching = serverData['continue_watching'];
 
     return Scaffold(
       body: SafeArea(
@@ -305,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.5)),
                         ),
                         child: Text(
-                          serverData?['notice'] ?? 'Free Trial - 5 Days Left',
+                          serverData['notice'],
                           style: const TextStyle(color: Color(0xFF00FF66), fontSize: 11),
                         ),
                       ),
@@ -314,12 +285,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
-                      // زر التحديث الفعال مع مؤشر دوران عند الجلب
                       IconButton(
-                        icon: isRefreshing 
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFF00FF66), strokeWidth: 2))
-                            : const Icon(Icons.replay, color: Colors.white), 
-                        onPressed: _fetchServerData,
+                        icon: const Icon(Icons.replay, color: Colors.white), 
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('تم تحديث الواجهة المحلية بنجاح!'), duration: Duration(seconds: 1)),
+                          );
+                        },
                       ),
                       IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
                     ],
@@ -371,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: _buildContinueItem(item['title'], item['subtitle'], item['poster_url']),
+                      child: _buildContinueItem(item['title'], item['subtitle'], item['progress']),
                     ),
                   );
                 }).toList(),
@@ -457,68 +429,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildContinueItem(String title, String sub, String posterUrl) {
+  Widget _buildContinueItem(String title, String sub, double progress) {
     return InkWell(
       onTap: () {},
       child: Container(
         height: 95,
         decoration: BoxDecoration(
-          color: const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(10),
+          // تصميم تدرجات نيون فخمة بديلة للصور تضمن استقرار المظهر وثباته بصرياً
+          gradient: const LinearGradient(
+            colors: [Color(0xFF121A17), Color(0xFF0B2618), Color(0xFF070A09)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.2), width: 1),
         ),
-        child: Stack(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // صورة البوستر الخلفية مع خلفية تدرج نيون خضراء افتراضية في حال تعذر جلب الصورة
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  posterUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF121A17), Color(0xFF003311)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.movie_creation_outlined, color: Color(0xFF00FF66), size: 30),
-                      ),
-                    );
-                  },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(Icons.movie_creation_outlined, color: Color(0xFF00FF66), size: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00FF66).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('HD', style: TextStyle(color: Color(0xFF00FF66), fontSize: 9, fontWeight: FontWeight.bold)),
                 ),
-              ),
+              ],
             ),
-            // طبقة تظليل سوداء شفافة لضمان وضوح النصوص فوق الصورة
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.black.withOpacity(0.55),
-                ),
-              ),
-            ),
-            // محتوى النصوص ومؤشر التقدم
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
-                  const SizedBox(height: 6),
-                  LinearProgressIndicator(
-                    value: 0.6,
-                    backgroundColor: Colors.black54,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
-                  )
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
+                const SizedBox(height: 6),
+                LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.black54,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
+                )
+              ],
             ),
           ],
         ),
