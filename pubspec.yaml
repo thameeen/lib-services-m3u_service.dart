@@ -6,11 +6,11 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
-dependencies:
+dependenciesdependencies:
   flutter:
     sdk: flutter
-  video_player: ^2.8.2
-  http: ^1.2.0
+  video_player: ^2.8.2   <--- أضف هذا السطر هنا فقط
+
 
 flutter:
   uses-material-design: true
