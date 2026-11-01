@@ -43,6 +43,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
   Map<String, dynamic>? serverData;
+  bool isRefreshing = false;
 
   // رابط السيرفر السحابي الخاص بك على GitHub
   final String serverJsonUrl = 'https://raw.githubusercontent.com/thameeen/lib-services-m3u_service.dart/refs/heads/main/heedar_server.json';
@@ -53,16 +54,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _fetchServerData();
   }
 
+  // دالة جلب البيانات وتحديث الشاشة بفعالية عند الضغط على زر التحديث
   Future<void> _fetchServerData() async {
+    setState(() => isRefreshing = true);
     try {
-      final response = await http.get(Uri.parse(serverJsonUrl));
+      final response = await http.get(Uri.parse('$serverJsonUrl?t=${DateTime.now().millisecondsSinceEpoch}'));
       if (response.statusCode == 200) {
         setState(() {
           serverData = json.decode(response.body);
+          isRefreshing = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم تحديث البيانات من السيرفر بنجاح!'), duration: Duration(seconds: 1)),
+        );
+      } else {
+        setState(() => isRefreshing = false);
       }
     } catch (e) {
-      // الاعتماد على البيانات الافتراضية في حال وجود أي عائق بالاتصال
+      setState(() => isRefreshing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر الاتصال بالسيرفر، يتم استخدام النسخة المحلية'), duration: Duration(seconds: 1)),
+      );
     }
   }
 
@@ -97,7 +109,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   const Divider(color: Colors.grey, height: 20),
-
                   const Text('طريقة الاتصال (Login Type):', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Row(
@@ -112,7 +123,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 15),
-
                   if (loginType == 'Xtream API') ...[
                     _buildTextField('اسم السيرفر أو الرابط (URL):', _urlController, 'http://provider.com:8080'),
                     const SizedBox(height: 10),
@@ -126,7 +136,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ] else ...[
                     _buildTextField('رابط ملف M3U الكامل:', _urlController, 'http://provider.com/get.php?username=...&password=...'),
                   ],
-
                   const SizedBox(height: 15),
                   const Text('معلومات الجهاز:', style: TextStyle(color: Colors.grey, fontSize: 11)),
                   const SizedBox(height: 5),
@@ -145,7 +154,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -252,17 +260,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {
         "title": "Dark City Chronicles",
         "subtitle": "Season 2 - Episode 8",
-        "poster_url": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500"
+        "poster_url": "https://picsum.photos/seed/movie1/500/300"
       },
       {
         "title": "La Casa De Papel",
         "subtitle": "Season 4 - Episode 3",
-        "poster_url": "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500"
+        "poster_url": "https://picsum.photos/seed/movie2/500/300"
       },
       {
         "title": "Lilo & Stitch",
         "subtitle": "2023",
-        "poster_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500"
+        "poster_url": "https://picsum.photos/seed/movie3/500/300"
       }
     ];
 
@@ -306,7 +314,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
-                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: _fetchServerData),
+                      // زر التحديث الفعال مع مؤشر دوران عند الجلب
+                      IconButton(
+                        icon: isRefreshing 
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFF00FF66), strokeWidth: 2))
+                            : const Icon(Icons.replay, color: Colors.white), 
+                        onPressed: _fetchServerData,
+                      ),
                       IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
                     ],
                   )
@@ -454,23 +468,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: Stack(
           children: [
-            // صورة البستر الخلفية مع معالجة الأخطاء
+            // صورة البوستر الخلفية مع خلفية تدرج نيون خضراء افتراضية في حال تعذر جلب الصورة
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
                   posterUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF121A17)),
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF121A17), Color(0xFF003311)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.movie_creation_outlined, color: Color(0xFF00FF66), size: 30),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            // طبقة تظليل سوداء لضمان وضوح النصوص فوق الصورة
+            // طبقة تظليل سوداء شفافة لضمان وضوح النصوص فوق الصورة
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Colors.black.withOpacity(0.65),
+                  color: Colors.black.withOpacity(0.55),
                 ),
               ),
             ),
