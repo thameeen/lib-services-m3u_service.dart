@@ -11,10 +11,5 @@ dependencies:
     sdk: flutter
   video_player: ^2.8.3
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter_test
-  flutter_lints: ^2.0.0
-
 flutter:
   uses-material-design: true
