@@ -51,19 +51,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         "title": "Dark City Chronicles",
         "subtitle": "Season 2 - Episode 8",
         "progress": 0.6,
-        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
       },
       {
         "title": "La Casa De Papel",
         "subtitle": "Season 4 - Episode 3",
         "progress": 0.4,
-        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
       },
       {
         "title": "Lilo & Stitch",
         "subtitle": "2023",
         "progress": 0.8,
-        "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
       }
     ]
   };
@@ -517,6 +517,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           _controller.setLooping(true);
           _controller.play();
         });
+      }).catchError((error) {
+        debugPrint("Error initializing video: $error");
       });
   }
 
@@ -533,15 +535,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          _isInitialized
-              ? SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _controller.value.size.width,
-                      height: _controller.value.size.height,
-                      child: VideoPlayer(_controller),
-                    ),
+          _isInitialized && _controller.value.isInitialized
+              ? Center(
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
                   ),
                 )
               : const Center(
@@ -564,13 +562,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 ),
                 IconButton(
                   icon: Icon(
-                    _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                    _isInitialized && _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
                     color: const Color(0xFF00FF66),
                     size: 28,
                   ),
                   onPressed: () {
                     setState(() {
-                      _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                      if (_controller.value.isPlaying) {
+                        _controller.pause();
+                      } else {
+                        _controller.play();
+                      }
                     });
                   },
                 ),
