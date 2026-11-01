@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class M3uService {
-  // فحص الحساب وجلب معلومات السيرفر
   static Future> authenticateUser(String serverUrl, String username, String password) async {
     try {
       final cleanUrl = serverUrl.endsWith('/') ? serverUrl.substring(0, serverUrl.length - 1) : serverUrl;
@@ -27,18 +26,17 @@ class M3uService {
       } else {
         return {
           "success": false,
-          "message": "فشل الاتصال بالسيرفر (رمز الخطأ: ${response.statusCode})"
+          "message": "فشل الاتصال بالسيرفر"
         };
       }
     } catch (e) {
       return {
         "success": false,
-        "message": "تعذر الاتصال بالسيرفر، تأكد من الرابط أو الشبكة"
+        "message": "تعذر الاتصال بالسيرفر"
       };
     }
   }
 
-  // جلب قائمة قنوات البث المباشر (Live Streams)
   static Future<List<dynamic>> fetchLiveStreams(String serverUrl, String username, String password) async {
     try {
       final cleanUrl = serverUrl.endsWith('/') ? serverUrl.substring(0, serverUrl.length - 1) : serverUrl;
@@ -49,7 +47,7 @@ class M3uService {
         return json.decode(response.body);
       }
     } catch (e) {
-      // إرجاع قائمة فارغة عند حدوث خطأ
+      // Return empty list on error
     }
     return [];
   }
