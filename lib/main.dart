@@ -38,7 +38,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String selectedCategory = 'sports';
+  String selectedMainTab = 'LiveTV';
 
   void _playVideo(String title, String videoUrl) {
     Navigator.push(
@@ -58,17 +58,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // الشريط العلوي الاحترافي
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'HEEDAR TV',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF00FF66),
-                      letterSpacing: 2,
-                    ),
+                  const Row(
+                    children: [
+                      Text(
+                        'HEEDAR TV',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00FF66),
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      SizedBox(width: 15),
+                      Text(
+                        'Android TV Dashboard',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -78,40 +88,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       border: Border.all(color: const Color(0xFF00FF66)),
                     ),
                     child: const Text(
-                      'Android TV Ready',
+                      'Connected Active',
                       style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 15),
+
+              // الواجهة الرئيسية: الأقسام الكبرى (Live TV, Movies, Series)
               Row(
                 children: [
-                  Expanded(child: _buildCategoryButton('الرياضة (Sports)', Icons.sports_soccer, 'sports')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildCategoryButton('الأخبار (News)', Icons.article, 'news')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildCategoryButton('عام (General)', Icons.tv, 'general')),
+                  Expanded(child: _buildMainCategoryCard('Live TV', 'القنوات الحية والرياضة', Icons.tv, 'LiveTV')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _buildMainCategoryCard('Movies', 'الأفلام والمنوعات', Icons.movie, 'Movies')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _buildMainCategoryCard('Series', 'المسلسلات الحصرية', Icons.video_library, 'Series')),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
+
+              // العنوان الفرعي حسب القسم المختار
               Text(
-                'القنوات المتاحة في القسم ($selectedCategory):',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                selectedMainTab == 'LiveTV' ? 'قنوات البث المباشر المتاحة:' : 'مكتبة الوسائط والأفلام:',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
+
+              // قائمة القنوات أو المحتوى داخل القسم
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
-                  childAspectRatio: 3.5,
+                  childAspectRatio: 3.8,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  children: [
-                    _buildChannelCard('قناة الرياضة الحية 1', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
-                    _buildChannelCard('قناة الرياضة الحية 2', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
-                    _buildChannelCard('قناة الأخبار العالمية', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
-                    _buildChannelCard('قناة الأفلام والمنوعات', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
-                  ],
+                  children: _getMediaListForTab(),
                 ),
               ),
             ],
@@ -121,19 +132,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoryButton(String title, IconData icon, String categoryKey) {
-    bool isSelected = selectedCategory == categoryKey;
+  Widget _buildMainCategoryCard(String title, String subtitle, IconData icon, String tabKey) {
+    bool isSelected = selectedMainTab == tabKey;
     return InkWell(
       onTap: () {
         setState(() {
-          selectedCategory = categoryKey;
+          selectedMainTab = tabKey;
         });
       },
       child: Container(
-        height: 50,
+        height: 85,
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF0B2618) : const Color(0xFF121A17),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? const Color(0xFF00FF66) : Colors.transparent,
             width: 2,
@@ -142,13 +153,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF00FF66), size: 18),
-            const SizedBox(width: 8),
-            Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            Icon(icon, color: const Color(0xFF00FF66), size: 28),
+            const SizedBox(width: 12),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _getMediaListForTab() {
+    if (selectedMainTab == 'LiveTV') {
+      return [
+        _buildChannelCard('قناة الرياضة الحية 1 (Sports)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 2 (Sports)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('قناة الأخبار العالمية (News)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('قناة المنوعات العامة (General)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+      ];
+    } else if (selectedMainTab == 'Movies') {
+      return [
+        _buildChannelCard('فيلم الحركة والمغامرة (Action)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('فيلم الكوميديا والدراما (Comedy)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+      ];
+    } else {
+      return [
+        _buildChannelCard('مسلسل الحلقة الأولى (Ep 1)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('مسلسل الحلقة الثانية (Ep 2)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+      ];
+    }
   }
 
   Widget _buildChannelCard(String title, String url) {
