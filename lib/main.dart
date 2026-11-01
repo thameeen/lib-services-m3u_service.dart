@@ -40,6 +40,60 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedMainTab = 'LiveTV';
 
+  // نافذة الإعدادات
+  void _openSettings() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF121A17),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
+        ),
+        title: const Text('إعدادات السيرفر', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+        content: const Text('حالة السيرفر: متصل بنجاح وجاهز للبث التلفزيوني.', style: TextStyle(color: Colors.white, fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق', style: TextStyle(color: Color(0xFF00FF66))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // نافذة البحث
+  void _openSearch() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF121A17),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
+        ),
+        title: const Text('بحث عن قناة أو فيلم', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+        content: TextField(
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF070A09),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            hintText: 'اكتب اسم المحتوى...',
+            hintStyle: const TextStyle(color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Color(0xFF00FF66)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _playVideo(String title, String videoUrl) {
     Navigator.push(
       context,
@@ -58,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الشريط العلوي الاحترافي
+              // الشريط العلوي الاحترافي مع أزرار الإعدادات والبحث
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -75,47 +129,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       SizedBox(width: 15),
                       Text(
-                        'Android TV Dashboard',
+                        'Android TV Ready',
                         style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF121A17),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF00FF66)),
-                    ),
-                    child: const Text(
-                      'Connected Active',
-                      style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  Row(
+                    children: [
+                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('تم تحديث البيانات بنجاح!'), duration: Duration(seconds: 1)),
+                          );
+                        },
+                      ),
+                      IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
+                    ],
+                  )
                 ],
               ),
               const SizedBox(height: 15),
 
-              // الواجهة الرئيسية: الأقسام الكبرى (Live TV, Movies, Series)
+              // الأقسام الكبرى للتحكم (Live TV, Movies, Series)
               Row(
                 children: [
-                  Expanded(child: _buildMainCategoryCard('Live TV', 'القنوات الحية والرياضة', Icons.tv, 'LiveTV')),
+                  Expanded(child: _buildMainCategoryCard('Live TV', 'القنوات الحية', Icons.tv, 'LiveTV')),
                   const SizedBox(width: 15),
-                  Expanded(child: _buildMainCategoryCard('Movies', 'الأفلام والمنوعات', Icons.movie, 'Movies')),
+                  Expanded(child: _buildMainCategoryCard('Movies', 'الأفلام', Icons.movie, 'Movies')),
                   const SizedBox(width: 15),
-                  Expanded(child: _buildMainCategoryCard('Series', 'المسلسلات الحصرية', Icons.video_library, 'Series')),
+                  Expanded(child: _buildMainCategoryCard('Series', 'المسلسلات', Icons.video_library, 'Series')),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // العنوان الفرعي حسب القسم المختار
+              // عنوان القائمة
               Text(
-                selectedMainTab == 'LiveTV' ? 'قنوات البث المباشر المتاحة:' : 'مكتبة الوسائط والأفلام:',
+                selectedMainTab == 'LiveTV' ? 'قنوات البث المباشر المتاحة:' : 'مكتبة المحتوى والوسائط:',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
 
-              // قائمة القنوات أو المحتوى داخل القسم
+              // شبكة القنوات والمحتوى
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
@@ -141,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       },
       child: Container(
-        height: 85,
+        height: 75,
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF0B2618) : const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(14),
@@ -153,13 +209,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF00FF66), size: 28),
-            const SizedBox(width: 12),
+            Icon(icon, color: const Color(0xFF00FF66), size: 26),
+            const SizedBox(width: 10),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                 Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 10)),
               ],
             ),
@@ -243,8 +299,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
-        setState(() => _isInitialized = true);
-        _controller.play();
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+          _controller.play();
+        }
       });
   }
 
