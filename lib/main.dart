@@ -39,59 +39,139 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedMainTab = 'LiveTV';
-  final TextEditingController _playlistController = TextEditingController(
+  
+  // controllers للإعدادات
+  final TextEditingController _serverUrlController = TextEditingController(
     text: 'https://rckestxy.xyz:80',
   );
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  
+  int _selectedAuthType = 0; // 0 = M3U Url, 1 = Xtream API
 
   void _openSettings() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF121A17),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
-        ),
-        title: const Text('إعدادات سيرفر IPTV / Xtream', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('أدخل رابط السيرفر أو ملف M3U:', style: TextStyle(color: Colors.white, fontSize: 13)),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _playlistController,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFF070A09),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  hintText: 'http://example.com:80',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.link, color: Color(0xFF00FF66)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF121A17),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.settings, color: Color(0xFF00FF66)),
+                SizedBox(width: 10),
+                Text('إعدادات السيرفر والاتصال', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 450,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ChoiceChip(
+                          label: const Text('رابط M3U'),
+                          selected: _selectedAuthType == 0,
+                          selectedColor: const Color(0xFF00FF66),
+                          onSelected: (bool selected) {
+                            setDialogState(() {
+                              _selectedAuthType = 0;
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 10),
+                        ChoiceChip(
+                          label: const Text('Xtream API'),
+                          selected: _selectedAuthType == 1,
+                          selectedColor: const Color(0xFF00FF66),
+                          onSelected: (bool selected) {
+                            setDialogState(() {
+                              _selectedAuthType = 1;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('رابط السيرفر (Server URL):', style: TextStyle(color: Colors.white, fontSize: 12)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _serverUrlController,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFF070A09),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        hintText: 'http://domain.com:8080',
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.dns, color: Color(0xFF00FF66)),
+                      ),
+                    ),
+                    if (_selectedAuthType == 1) ...[
+                      const SizedBox(height: 12),
+                      const Text('اسم المستخدم (Username):', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _usernameController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF070A09),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          hintText: 'Username',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.person, color: Color(0xFF00FF66)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text('كلمة المرور (Password):', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF070A09),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          hintText: 'Password',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.lock, color: Color(0xFF00FF66)),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66)),
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تم حفظ بيانات السيرفر وبدء مزامنة القنوات...'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: const Text('حفظ واتصال', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66)),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تم حفظ وتحديث السيرفر بنجاح!'), duration: Duration(seconds: 2)),
-              );
-            },
-            child: const Text('حفظ واتصال', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
