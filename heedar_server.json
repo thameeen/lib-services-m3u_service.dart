@@ -27,19 +27,19 @@
       "title": "Dark City Chronicles",
       "subtitle": "Season 2 - Episode 8",
       "progress": 0.6,
-      "poster_url": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500"
+      "poster_url": "https://picsum.photos/seed/movie1/500/300"
     },
     {
       "title": "La Casa De Papel",
       "subtitle": "Season 4 - Episode 3",
       "progress": 0.4,
-      "poster_url": "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500"
+      "poster_url": "https://picsum.photos/seed/movie2/500/300"
     },
     {
       "title": "Lilo & Stitch",
       "subtitle": "2023",
       "progress": 0.8,
-      "poster_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500"
+      "poster_url": "https://picsum.photos/seed/movie3/500/300"
     }
   ]
 }
