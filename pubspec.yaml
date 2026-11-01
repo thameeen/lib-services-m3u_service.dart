@@ -1,5 +1,8 @@
-name: heedar_tv
-description: A new Flutter project for Android TV.
+name: heedar_tvdependencies:
+  flutter:
+    sdk: flutter
+  video_player: ^2.8.2
+  http: ^1.2.0
 publish_to: 'none'
 version: 1.0.0+1
 
