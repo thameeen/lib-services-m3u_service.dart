@@ -264,7 +264,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الشريط العلوي
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -311,8 +310,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // الأقسام الرئيسية
               Row(
                 children: [
                   Expanded(
@@ -343,8 +340,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // قسم متابعة المشاهدة
               const Text(
                 'Continue Watching',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
@@ -366,8 +361,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }).toList(),
               ),
               const Spacer(),
-
-              // الشريط السفلي ومعلومات الجهاز
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
