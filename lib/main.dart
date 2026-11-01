@@ -40,42 +40,43 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String selectedCategory = 'LiveTV';
-  bool isLoadingChannels = true;
-  List> channelsList = [];
+  String selectedCategory = 'sports';
+  bool isLoading = true;
+  List> mediaList = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchFreeChannels();
+    _loadCategoryContent(selectedCategory);
   }
 
-  // جلب القنوات المجانية من مصدر IPTV-Org الشهير
-  Future<void> _fetchFreeChannels() async {
+  Future<void> _loadCategoryContent(String category) async {
+    setState(() {
+      isLoading = true;
+      selectedCategory = category;
+    });
+
     try {
-      // جلب عينة من القنوات الإخبارية والرياضية المجانية المتاحة علماً
       final response = await http.get(Uri.parse('https://iptv-org.github.io/iptv/index.channels.json'));
       if (response.statusCode == 200) {
         List data = json.decode(response.body);
         setState(() {
-          channelsList = data.take(50).map((channel) {
+          mediaList = data.take(30).map((item) {
             return {
-              "title": channel['name']?.toString() ?? 'قناة غير معروفة',
-              "logo": channel['logo']?.toString() ?? '',
-              "url": channel['url']?.toString() ?? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+              "title": item['name']?.toString() ?? 'قناة غير معروفة',
+              "url": item['url']?.toString() ?? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
             };
           }).toList();
-          isLoadingChannels = false;
+          isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        // روابط بديلة للاختبار في حال انقطع النت المؤقت
-        channelsList = [
-          {"title": "Big Buck Bunny (HD)", "logo": "", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
-          {"title": "Tears of Steel (4K)", "logo": "", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
+        mediaList = [
+          {"title": "قناة تجريبية 1", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
+          {"title": "قناة تجريبية 2", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
         ];
-        isLoadingChannels = false;
+        isLoading = false;
       });
     }
   }
@@ -98,90 +99,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // شريط العلوى للتطبيق
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Text(
-                        'HEEDAR TV',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF00FF66),
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF121A17),
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                        ),
-                        child: Text(
-                          'IPTV-Org Free Stream',
-                          style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'HEEDAR TV',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00FF66),
+                      letterSpacing: 2,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: () {
-                      setState(() => isLoadingChannels = true);
-                      _fetchFreeChannels();
-                    },
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121A17),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF00FF66)),
+                    ),
+                    child: const Text(
+                      'IPTV Free Streams',
+                      style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              // أقسام القنوات والأفلام
+              const SizedBox(height: 15),
               Row(
                 children: [
-                  Expanded(child: _buildCategoryCard('Live TV Streams', 'Free Global Channels', Icons.tv, 'LiveTV')),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildCategoryCard('VOD Movies', 'Sample Media', Icons.movie, 'Movies')),
+                  Expanded(child: _buildCategoryButton('الرياضة (Sports)', Icons.sports_soccer, 'sports')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildCategoryButton('الأخبار (News)', Icons.article, 'news')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildCategoryButton('عام (General)', Icons.tv, 'general')),
                 ],
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'القنوات الحية المتاحة (Live Channels):',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+              const SizedBox(height: 15),
+              Text(
+                'القنوات المتاحة في القسم ($selectedCategory):',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
-              // قائمة القنوات
               Expanded(
-                child: isLoadingChannels
+                child: isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFF00FF66)))
                     : GridView.builder(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           childAspectRatio: 3.2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
                         ),
-                        itemCount: channelsList.length,
+                        itemCount: mediaList.length,
                         itemBuilder: (context, index) {
-                          final channel = channelsList[index];
+                          final item = mediaList[index];
                           return InkWell(
-                            onTap: () => _playVideo(channel['title']!, channel['url']!),
+                            onTap: () => _playVideo(item['title']!, item['url']!),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: const Color(0xFF121A17),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.3)),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 28),
-                                  const SizedBox(width: 12),
+                                  const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 24),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      channel['title']!,
-                                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                      item['title']!,
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -200,32 +189,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoryCard(String title, String subtitle, IconData icon, String categoryKey) {
+  Widget _buildCategoryButton(String title, IconData icon, String categoryKey) {
     bool isSelected = selectedCategory == categoryKey;
-    return Container(
-      height: 90,
-      decoration: BoxDecoration(
-        color: const Color(0xFF121A17),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isSelected ? const Color(0xFF00FF66) : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: const Color(0xFF00FF66), size: 28),
-          const SizedBox(width: 12),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-              Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-            ],
+    return InkWell(
+      onTap: () => _loadCategoryContent(categoryKey),
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0B2618) : const Color(0xFF121A17),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF00FF66) : Colors.transparent,
+            width: 2,
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: const Color(0xFF00FF66), size: 18),
+            const SizedBox(width: 8),
+            Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }
