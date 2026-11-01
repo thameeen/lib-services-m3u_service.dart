@@ -255,23 +255,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<Widget> _getMediaListForTab() {
-    // استخدام روابط بث حقيقية ومستقرة ومباشرة (HLS Streams)
+    // روابط فيديو سريعة وخفيفة تضمن الفتح الفوري بدون أي انتظار
     if (selectedMainTab == 'LiveTV') {
       return [
-        _buildChannelCard('قناة البث الحي الأولى [Live HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
-        _buildChannelCard('قناة الرياضة العالمية [Live HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
-        _buildChannelCard('قناة الأخبار المباشرة [Live FHD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
-        _buildChannelCard('قناة المنوعات العامة [Live HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
+        _buildChannelCard('قناة الرياضة الحية 1 [HD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 2 [HD]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+        _buildChannelCard('قناة الأخبار العالمية [FHD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
+        _buildChannelCard('قناة المنوعات العامة [HD]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
       ];
     } else if (selectedMainTab == 'Movies') {
       return [
-        _buildChannelCard('فيلم الحركة والمغامرة [VOD 4K]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
-        _buildChannelCard('فيلم الكوميديا والدراما [VOD HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
+        _buildChannelCard('فيلم الحركة والمغامرة [4K]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+        _buildChannelCard('فيلم الكوميديا والدراما [HD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
       ];
     } else {
       return [
-        _buildChannelCard('مسلسل الحلقة الأولى [Series HD]', 'https://cph-p2p-ms.akamaized.net/hls/live/2000341/test/master.m3u8'),
-        _buildChannelCard('مسلسل الحلقة الثانية [Series HD]', 'https://devimages-cdn.apple.com/samplecode/avfoundation/denied/bipbop_16x9/bipbop_16x9_variant.m3u8'),
+        _buildChannelCard('مسلسل الحلقة الأولى [Ep 1]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
+        _buildChannelCard('مسلسل الحلقة الثانية [Ep 2]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
       ];
     }
   }
@@ -368,7 +368,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 children: [
                   CircularProgressIndicator(color: Color(0xFF00FF66)),
                   SizedBox(height: 15),
-                  Text('جاري الاتصال بسيرفر البث...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text('جاري بدء التشغيل...', style: TextStyle(color: Colors.grey, fontSize: 13)),
                 ],
               ),
       ),
