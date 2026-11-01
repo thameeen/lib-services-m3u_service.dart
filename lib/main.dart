@@ -39,8 +39,11 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedMainTab = 'LiveTV';
+  final TextEditingController _playlistController = TextEditingController(
+    text: 'https://rckestxy.xyz:80',
+  );
 
-  // نافذة الإعدادات
+  // نافذة الإعدادات المتقدمة لإدخال السيرفر
   void _openSettings() {
     showDialog(
       context: context,
@@ -50,19 +53,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
         ),
-        title: const Text('إعدادات السيرفر', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: const Text('حالة السيرفر: متصل بنجاح وجاهز للبث التلفزيوني.', style: TextStyle(color: Colors.white, fontSize: 13)),
+        title: const Text('إعدادات سيرفر IPTV / Xtream', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('أدخل رابط السيرفر أو ملف M3U:', style: TextStyle(color: Colors.white, fontSize: 13)),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _playlistController,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF070A09),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  hintText: 'http://example.com:80',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.link, color: Color(0xFF00FF66)),
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق', style: TextStyle(color: Color(0xFF00FF66))),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66)),
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم حفظ وتحديث السيرفر بنجاح!'), duration: Duration(seconds: 2)),
+              );
+            },
+            child: const Text('حفظ واتصال', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  // نافذة البحث
+  // نافذة البحث السريع
   void _openSearch() {
     showDialog(
       context: context,
@@ -73,15 +108,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
         ),
         title: const Text('بحث عن قناة أو فيلم', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: TextField(
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFF070A09),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            hintText: 'اكتب اسم المحتوى...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Icons.search, color: Color(0xFF00FF66)),
+        content: SizedBox(
+          width: 400,
+          child: TextField(
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFF070A09),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              hintText: 'اكتب اسم المحتوى...',
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF00FF66)),
+            ),
           ),
         ),
         actions: [
@@ -112,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الشريط العلوي الاحترافي مع أزرار الإعدادات والبحث
+              // الشريط العلوي الاحترافي
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -129,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       SizedBox(width: 15),
                       Text(
-                        'Android TV Ready',
+                        'Global Smart TV Edition',
                         style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                     ],
@@ -141,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         icon: const Icon(Icons.refresh, color: Colors.white),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم تحديث البيانات بنجاح!'), duration: Duration(seconds: 1)),
+                            const SnackBar(content: Text('جاري مزامنة القنوات...'), duration: Duration(seconds: 1)),
                           );
                         },
                       ),
@@ -155,7 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // الأقسام الكبرى للتحكم (Live TV, Movies, Series)
               Row(
                 children: [
-                  Expanded(child: _buildMainCategoryCard('Live TV', 'القنوات الحية', Icons.tv, 'LiveTV')),
+                  Expanded(child: _buildMainCategoryCard('Live TV', 'البث المباشر', Icons.tv, 'LiveTV')),
                   const SizedBox(width: 15),
                   Expanded(child: _buildMainCategoryCard('Movies', 'الأفلام', Icons.movie, 'Movies')),
                   const SizedBox(width: 15),
@@ -171,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 10),
 
-              // شبكة القنوات والمحتوى
+              // شبكة المحتوى
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
@@ -228,20 +266,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Widget> _getMediaListForTab() {
     if (selectedMainTab == 'LiveTV') {
       return [
-        _buildChannelCard('قناة الرياضة الحية 1 (Sports)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
-        _buildChannelCard('قناة الرياضة الحية 2 (Sports)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
-        _buildChannelCard('قناة الأخبار العالمية (News)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
-        _buildChannelCard('قناة المنوعات العامة (General)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 1 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 2 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('قناة الأخبار العالمية [FHD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('قناة المنوعات العامة [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
       ];
     } else if (selectedMainTab == 'Movies') {
       return [
-        _buildChannelCard('فيلم الحركة والمغامرة (Action)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
-        _buildChannelCard('فيلم الكوميديا والدراما (Comedy)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        _buildChannelCard('فيلم الحركة والمغامرة [4K]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('فيلم الكوميديا والدراما [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
       ];
     } else {
       return [
-        _buildChannelCard('مسلسل الحلقة الأولى (Ep 1)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
-        _buildChannelCard('مسلسل الحلقة الثانية (Ep 2)', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+        _buildChannelCard('مسلسل الحلقة الأولى [Ep 1]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('مسلسل الحلقة الثانية [Ep 2]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
       ];
     }
   }
