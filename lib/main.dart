@@ -102,7 +102,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]
   };
 
-  // تم وضع بياناتك الافتراضية هنا للاتصال المباشر
   final TextEditingController _urlController = TextEditingController(text: 'https://rckestxy.xyz:80');
   final TextEditingController _userController = TextEditingController(text: '0781616423');
   final TextEditingController _passController = TextEditingController(text: '8174672257');
@@ -111,7 +110,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // محاولة الاتصال التلقائي بالسيرفر عند فتح التطبيق
     _autoConnectServer();
   }
 
