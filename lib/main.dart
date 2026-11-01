@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,15 +41,43 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String selectedCategory = 'Movies';
-  
-  // متغيرات إعدادات الـ IPTV الاحترافية
+  String selectedCategory = 'movies';
+  bool isLoading = true;
+  Map<String, dynamic>? serverData;
+
+  // رابط السيرفر السحابي (Raw URL الخاص بملف الـ JSON على جيت هاب)
+  // ضع رابط الـ Raw الخاص بملفك هنا:
+  final String serverJsonUrl = 'https://raw.githubusercontent.com/thameeen/lib-services-m3u_service.dart/refs/heads/main/heedar_server.json';
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchServerData();
+  }
+
+  // دالة جلب البيانات من السيرفر الخاص بك
+  Future<void> _fetchServerData() async {
+    try {
+      final response = await http.get(Uri.parse(serverJsonUrl));
+      if (response.statusCode == 200) {
+        setState(() {
+          serverData = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
   final TextEditingController _urlController = TextEditingController(text: 'http://');
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   String loginType = 'Xtream API';
 
-  // نافذة الإعدادات الاحترافية الشاملة
   void _openSettings() {
     showDialog(
       context: context,
@@ -75,7 +105,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const Divider(color: Colors.grey, height: 20),
 
-                  // اختيار نوع الاتصال
                   const Text('طريقة الاتصال (Login Type):', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Row(
@@ -91,7 +120,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 15),
 
-                  // حقول الإدخال حسب نوع الاتصال
                   if (loginType == 'Xtream API') ...[
                     _buildTextField('اسم السيرفر أو الرابط (URL):', _urlController, 'http://provider.com:8080'),
                     const SizedBox(height: 10),
@@ -125,7 +153,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // الأزرار
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -195,7 +222,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // نافذة البحث
   void _openSearch() {
     showDialog(
       context: context,
@@ -229,6 +255,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // جلب القوائم من السيرفر أو استخدام قيم افتراضية في حال التحميل
+    List categories = serverData?['categories'] ?? [
+      {"id": "live", "title": "Live TV's", "subtitle": "+5000 Channels", "icon": "tv"},
+      {"id": "movies", "title": "Movies", "subtitle": "+12000 Movies", "icon": "movie"},
+      {"id": "series", "title": "Series", "subtitle": "+7000 Series", "icon": "video_library"}
+    ];
+
+    List continueWatching = serverData?['continue_watching'] ?? [];
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -259,9 +294,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.5)),
                         ),
-                        child: const Text(
-                          'Free Trial - 5 Days Left',
-                          style: TextStyle(color: Color(0xFF00FF66), fontSize: 11),
+                        child: Text(
+                          serverData?['notice'] ?? 'Free Trial - 5 Days Left',
+                          style: const TextStyle(color: Color(0xFF00FF66), fontSize: 11),
                         ),
                       ),
                     ],
@@ -269,9 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
-                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري تحديث البيانات...')));
-                      }),
+                      IconButton(icon: const Icon(Icons.replay, color: Colors.white), onPressed: _fetchServerData),
                       IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
                     ],
                   )
@@ -279,19 +312,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
 
-              // الأقسام الرئيسية
+              // الأقسام الرئيسية (تأتي من السيرفر)
               Row(
                 children: [
                   Expanded(
                     flex: 2,
                     child: Row(
-                      children: [
-                        Expanded(child: _buildCategoryCard('Live TV\'s', '+5000 Channels', Icons.tv, 'LiveTV')),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildCategoryCard('Movies', '+12000 Movies', Icons.movie, 'Movies')),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildCategoryCard('Series', '+7000 Series', Icons.video_library, 'Series')),
-                      ],
+                      children: categories.map<Widget>((cat) {
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: _buildCategoryCard(
+                              cat['title'],
+                              cat['subtitle'],
+                              cat['id'] == 'live' ? Icons.tv : (cat['id'] == 'movies' ? Icons.movie : Icons.video_library),
+                              cat['id'],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -311,20 +350,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
 
-              // قسم متابعة المشاهدة
+              // قسم متابعة المشاهدة (مع البوسترات القادمة من السيرفر)
               const Text(
                 'Continue Watching',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
               Row(
-                children: [
-                  Expanded(child: _buildContinueItem('Dark City Chronicles', 'Season 2 - Episode 8')),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildContinueItem('La Casa De Papel', 'Season 4 - Episode 3')),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildContinueItem('Lilo & Stitch', '2023')),
-                ],
+                children: continueWatching.isNotEmpty
+                    ? continueWatching.map<Widget>((item) {
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: _buildContinueItem(item['title'], item['subtitle'], item['poster_url']),
+                          ),
+                        );
+                      }).toList()
+                    : [
+                        const Expanded(child: Center(child: CircularProgressIndicator(color: Color(0xFF00FF66))))
+                      ],
               ),
               const Spacer(),
 
@@ -407,14 +451,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildContinueItem(String title, String sub) {
+  Widget _buildContinueItem(String title, String sub, String posterUrl) {
     return InkWell(
       onTap: () {},
       child: Container(
-        height: 85,
+        height: 95,
         decoration: BoxDecoration(
           color: const Color(0xFF121A17),
           borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: NetworkImage(posterUrl),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.darken),
+          ),
         ),
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -423,11 +472,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(sub, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+            Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
             const SizedBox(height: 6),
             LinearProgressIndicator(
               value: 0.6,
-              backgroundColor: Colors.black,
+              backgroundColor: Colors.black54,
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
             )
           ],
