@@ -6,7 +6,6 @@ import 'package:video_player/video_player.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // فرض فتح التطبيق بالوضع الأفقي فقط (Landscape)
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
@@ -35,7 +34,7 @@ class HeedarTVApp extends StatelessWidget {
 
 // ==================== خدمة الاتصال بالسيرفر ====================
 class M3uService {
-  static Future authenticateUser(String serverUrl, String username, String password) async {
+  static Future> authenticateUser(String serverUrl, String username, String password) async {
     try {
       final cleanUrl = serverUrl.endsWith('/') ? serverUrl.substring(0, serverUrl.length - 1) : serverUrl;
       final url = Uri.parse('$cleanUrl/player_api.php?username=$username&password=$password');
@@ -65,7 +64,7 @@ class M3uService {
     } catch (e) {
       return {
         "success": false,
-        "message": "تعذر الاتصال بالسيرفر"
+        "message": "تعذر الاتصال بالسيرفر (تأكد من الرابط)"
       };
     }
   }
@@ -81,6 +80,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
+  bool isConnected = false;
 
   final Map<String, dynamic> serverData = {
     "app_name": "Heedar TV",
@@ -102,10 +102,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ]
   };
 
-  final TextEditingController _urlController = TextEditingController(text: 'http://');
-  final TextEditingController _userController = TextEditingController();
-  final TextEditingController _passController = TextEditingController();
+  // تم وضع بياناتك الافتراضية هنا للاتصال المباشر
+  final TextEditingController _urlController = TextEditingController(text: 'https://rckestxy.xyz:80');
+  final TextEditingController _userController = TextEditingController(text: '0781616423');
+  final TextEditingController _passController = TextEditingController(text: '8174672257');
   String loginType = 'Xtream API';
+
+  @override
+  void initState() {
+    super.initState();
+    // محاولة الاتصال التلقائي بالسيرفر عند فتح التطبيق
+    _autoConnectServer();
+  }
+
+  Future<void> _autoConnectServer() async {
+    final result = await M3uService.authenticateUser(
+      _urlController.text.trim(),
+      _userController.text.trim(),
+      _passController.text.trim(),
+    );
+
+    if (result['success'] && mounted) {
+      setState(() {
+        isConnected = true;
+        serverData['notice'] = "حالة الحساب: نشط (Active)";
+      });
+    }
+  }
 
   void _openSettings() {
     bool isAuthenticating = false;
@@ -192,6 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   if (mounted) {
                                     Navigator.pop(context);
                                     setState(() {
+                                      isConnected = true;
                                       serverData['notice'] = "حالة الحساب: نشط (Active)";
                                     });
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -332,7 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: Text(
                           serverData['notice'],
-                          style: const TextStyle(color: Color(0xFF00FF66), fontSize: 11),
+                          style: TextStyle(color: isConnected ? Colors.greenAccent : const Color(0xFF00FF66), fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -343,8 +367,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       IconButton(
                         icon: const Icon(Icons.replay, color: Colors.white), 
                         onPressed: () {
+                          _autoConnectServer();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم تحديث البيانات!'), duration: Duration(seconds: 1)),
+                            const SnackBar(content: Text('جاري إعادة فحص الاتصال بالسيرفر...'), duration: Duration(seconds: 1)),
                           );
                         },
                       ),
@@ -375,8 +400,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         _buildSideCard('Favorites', '422 Items', Icons.favorite, () {}),
                         const SizedBox(height: 10),
-                        _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play, () {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Current Playlist: Active')));
+                        _buildSideCard('Playlists', isConnected ? 'Xtream Connected' : '1 Playlist', Icons.playlist_play, () {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isConnected ? 'السيرفر متصل بنجاح وجاهز' : 'غير متصل')));
                         }),
                       ],
                     ),
@@ -409,7 +434,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Device ID: 345678    Device PIN: 307654', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                  Text('11:46 PM - Fri, Feb 20', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                  Text('HEEDAR TV - IPTV Client', style: TextStyle(color: Colors.grey, fontSize: 11)),
                 ],
               )
             ],
@@ -555,7 +580,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    // التأكد من أن المشغل يعمل بالعرض الأفقي وملء الشاشة
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -572,7 +596,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    // إعادة السماح بالاتجاهات الأخرى عند الخروج من الشاشة إذا لزم الأمر
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
