@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package0:flutter/material.dart';
+import '../services/m3u_service.dart';
 import 'video_player_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -10,27 +11,23 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
+  bool isLoading = false;
+  List<dynamic> liveChannels = [];
 
   final Map<String, dynamic> serverData = {
     "app_name": "Heedar TV",
     "version": "1.0.0",
-    "notice": "Free Trial - 5 Days Left",
+    "notice": "غير متصل بالسيرفر",
     "continue_watching": [
       {
-        "title": "Big Buck Bunny (HD Movie)",
-        "subtitle": "VOD Stream (MP4)",
+        "title": "Big Buck Bunny",
+        "subtitle": "VOD Sample Stream",
         "progress": 0.6,
         "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
       },
       {
-        "title": "Elephants Dream",
-        "subtitle": "VOD Stream (MP4)",
-        "progress": 0.4,
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
-      },
-      {
         "title": "Tears of Steel",
-        "subtitle": "Sci-Fi Movie",
+        "subtitle": "VOD Sample Stream",
         "progress": 0.8,
         "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
       }
@@ -43,6 +40,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String loginType = 'Xtream API';
 
   void _openSettings() {
+    bool isAuthenticating = false;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -95,29 +94,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ] else ...[
                     _buildTextField('رابط ملف M3U الكامل:', _urlController, 'http://provider.com/get.php?username=...&password=...'),
                   ],
-                  const SizedBox(height: 15),
-                  const Text('معلومات الجهاز:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                  const SizedBox(height: 5),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF070A09),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Device ID: 345678', style: TextStyle(color: Colors.white, fontSize: 11)),
-                        Text('Mac Address: AA:BB:CC:DD:EE', style: TextStyle(color: Colors.white, fontSize: 11)),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: isAuthenticating ? null : () => Navigator.pop(context),
                         child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
                       ),
                       const SizedBox(width: 10),
@@ -127,13 +109,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم حفظ بيانات السيرفر وجاري الاتصال بنجاح!'), duration: Duration(seconds: 2)),
-                          );
-                        },
-                        child: const Text('تسجيل الدخول / حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        onPressed: isAuthenticating
+                            ? null
+                            : () async {
+                                setStateDialog(() => isAuthenticating = true);
+                                final result = await M3uService.authenticateUser(
+                                  _urlController.text.trim(),
+                                  _userController.text.trim(),
+                                  _passController.text.trim(),
+                                );
+                                setStateDialog(() => isAuthenticating = false);
+
+                                if (result['success']) {
+                                  if (mounted) {
+                                    Navigator.pop(context);
+                                    setState(() {
+                                      serverData['notice'] = "حالة الحساب: نشط (Active)";
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('تم الاتصال بالسيرفر بنجاح!'), backgroundColor: Colors.green),
+                                    );
+                                  }
+                                } else {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(result['message']), backgroundColor: Colors.redAccent),
+                                    );
+                                  }
+                                }
+                              },
+                        child: isAuthenticating
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                            : const Text('تسجيل الدخول / حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -269,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         icon: const Icon(Icons.replay, color: Colors.white), 
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم تحديث الواجهة المحلية بنجاح!'), duration: Duration(seconds: 1)),
+                            const SnackBar(content: Text('تم تحديث البيانات من السيرفر!'), duration: Duration(seconds: 1)),
                           );
                         },
                       ),
@@ -301,7 +308,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildSideCard('Favorites', '422 Items', Icons.favorite, () {}),
                         const SizedBox(height: 10),
                         _buildSideCard('Playlists', '1 Playlist', Icons.playlist_play, () {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Current Playlist: Global Heedar Mix')));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Current Playlist: Active Stream')));
                         }),
                       ],
                     ),
@@ -310,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Continue Watching / Media Stream',
+                'Continue Watching / Stream Media',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
