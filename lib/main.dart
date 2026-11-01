@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
 void main() {
@@ -38,79 +40,44 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String selectedCategory = 'movies';
-  bool isConnected = true;
+  String selectedCategory = 'LiveTV';
+  bool isLoadingChannels = true;
+  List> channelsList = [];
 
-  final Map<String, dynamic> serverData = {
-    "app_name": "Heedar TV",
-    "version": "1.0.0",
-    "notice": "حالة الحساب: نشط (Active) - Xtream Connected",
-    "continue_watching": [
-      {
-        "title": "Big Buck Bunny",
-        "subtitle": "VOD Sample Stream",
-        "progress": 0.6,
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      },
-      {
-        "title": "Tears of Steel",
-        "subtitle": "VOD Sample Stream",
-        "progress": 0.8,
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-      }
-    ]
-  };
-
-  void _openSettings() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF121A17),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
-        ),
-        title: const Text('إعدادات السيرفر', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: const Text('السيرفر متصل بنجاح باستخدام حساب Xtream API الخاص بك.', style: TextStyle(color: Colors.white, fontSize: 13)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق', style: TextStyle(color: Color(0xFF00FF66))),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _fetchFreeChannels();
   }
 
-  void _openSearch() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF121A17),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF00FF66), width: 1.5),
-        ),
-        title: const Text('بحث عن قناة أو فيلم', style: TextStyle(color: Color(0xFF00FF66), fontSize: 18)),
-        content: TextField(
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFF070A09),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            hintText: 'اكتب اسم المحتوى للبحث...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Icons.search, color: Color(0xFF00FF66)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق', style: TextStyle(color: Colors.grey)),
-          ),
-        ],
-      ),
-    );
+  // جلب القنوات المجانية من مصدر IPTV-Org الشهير
+  Future<void> _fetchFreeChannels() async {
+    try {
+      // جلب عينة من القنوات الإخبارية والرياضية المجانية المتاحة علماً
+      final response = await http.get(Uri.parse('https://iptv-org.github.io/iptv/index.channels.json'));
+      if (response.statusCode == 200) {
+        List data = json.decode(response.body);
+        setState(() {
+          channelsList = data.take(50).map((channel) {
+            return {
+              "title": channel['name']?.toString() ?? 'قناة غير معروفة',
+              "logo": channel['logo']?.toString() ?? '',
+              "url": channel['url']?.toString() ?? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            };
+          }).toList();
+          isLoadingChannels = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        // روابط بديلة للاختبار في حال انقطع النت المؤقت
+        channelsList = [
+          {"title": "Big Buck Bunny (HD)", "logo": "", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
+          {"title": "Tears of Steel (4K)", "logo": "", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
+        ];
+        isLoadingChannels = false;
+      });
+    }
   }
 
   void _playVideo(String title, String videoUrl) {
@@ -124,8 +91,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List continueWatching = serverData['continue_watching'];
-
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -133,12 +98,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // شريط العلوى للتطبيق
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Text(
+                      Text(
                         'HEEDAR TV',
                         style: TextStyle(
                           fontSize: 26,
@@ -147,96 +113,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           letterSpacing: 2,
                         ),
                       ),
-                      const SizedBox(width: 15),
+                      SizedBox(width: 15),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF121A17),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.5)),
+                          color: Color(0xFF121A17),
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
                         child: Text(
-                          serverData['notice'],
-                          style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                          'IPTV-Org Free Stream',
+                          style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: _openSearch),
-                      IconButton(
-                        icon: const Icon(Icons.replay, color: Colors.white), 
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('السيرفر متصل ويعمل بكفاءة!'), duration: Duration(seconds: 1)),
-                          );
-                        },
-                      ),
-                      IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: _openSettings),
-                    ],
-                  )
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    onPressed: () {
+                      setState(() => isLoadingChannels = true);
+                      _fetchFreeChannels();
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
+              // أقسام القنوات والأفلام
               Row(
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: Row(
-                      children: [
-                        Expanded(child: _buildCategoryCard('Live TV\'s', '+5000 Channels', Icons.tv, 'LiveTV')),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildCategoryCard('Movies', '+12000 Movies', Icons.movie, 'Movies')),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildCategoryCard('Series', '+7000 Series', Icons.video_library, 'Series')),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        _buildSideCard('Favorites', '422 Items', Icons.favorite, () {}),
-                        const SizedBox(height: 10),
-                        _buildSideCard('Playlists', 'Xtream Connected', Icons.playlist_play, () {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('السيرفر متصل بنجاح وجاهز')));
-                        }),
-                      ],
-                    ),
-                  )
+                  Expanded(child: _buildCategoryCard('Live TV Streams', 'Free Global Channels', Icons.tv, 'LiveTV')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _buildCategoryCard('VOD Movies', 'Sample Media', Icons.movie, 'Movies')),
                 ],
               ),
               const SizedBox(height: 20),
               const Text(
-                'Continue Watching / Media Stream',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                'القنوات الحية المتاحة (Live Channels):',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: continueWatching.map<Widget>((item) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: _buildContinueItem(
-                        item['title'], 
-                        item['subtitle'], 
-                        item['progress'],
-                        () => _playVideo(item['title'], item['video_url']),
+              // قائمة القنوات
+              Expanded(
+                child: isLoadingChannels
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF00FF66)))
+                    : GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 3.2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: channelsList.length,
+                        itemBuilder: (context, index) {
+                          final channel = channelsList[index];
+                          return InkWell(
+                            onTap: () => _playVideo(channel['title']!, channel['url']!),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF121A17),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.3)),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 28),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      channel['title']!,
+                                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                }).toList(),
               ),
-              const Spacer(),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Device ID: 345678    Device PIN: 307654', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                  Text('HEEDAR TV - IPTV Client', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                ],
-              )
             ],
           ),
         ),
@@ -246,117 +202,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildCategoryCard(String title, String subtitle, IconData icon, String categoryKey) {
     bool isSelected = selectedCategory == categoryKey;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedCategory = categoryKey;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم الانتقال إلى قسم: $title'), duration: const Duration(milliseconds: 800)),
-        );
-      },
-      child: Container(
-        height: 130,
-        decoration: BoxDecoration(
-          color: const Color(0xFF121A17),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF00FF66) : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: isSelected
-              ? [BoxShadow(color: const Color(0xFF00FF66).withOpacity(0.3), blurRadius: 10, spreadRadius: 2)]
-              : [],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: const Color(0xFF00FF66), size: 32),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-          ],
+    return Container(
+      height: 90,
+      decoration: BoxDecoration(
+        color: const Color(0xFF121A17),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF00FF66) : Colors.transparent,
+          width: 2,
         ),
       ),
-    );
-  }
-
-  Widget _buildSideCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF121A17),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF00FF66), size: 22),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContinueItem(String title, String sub, double progress, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 95,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF121A17), Color(0xFF0B2618), Color(0xFF070A09)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: const Color(0xFF00FF66), size: 28),
+          const SizedBox(width: 12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+              Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+            ],
           ),
-          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.3), width: 1.5),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 22),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00FF66).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text('HD', style: TextStyle(color: Color(0xFF00FF66), fontSize: 9, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
-                Text(sub, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 10)),
-                const SizedBox(height: 6),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.black54,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF66)),
-                )
-              ],
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -386,9 +255,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
-        setState(() {
-          _isInitialized = true;
-        });
+        setState(() => _isInitialized = true);
         _controller.play();
       });
   }
