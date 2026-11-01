@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
 void main() {
@@ -41,15 +39,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'sports';
-  bool isLoading = false;
-  
-  // قائمة ثابتة ومضمونة 100% لتجنب أي مشاكل في جلب الـ API من الهاتف
-  final List> mediaList = [
-    {"title": "قناة الرياضة الحية 1", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
-    {"title": "قناة الرياضة الحية 2", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
-    {"title": "قناة الأخبار العالمية", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"},
-    {"title": "قناة الأفلام والمنوعات", "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"},
-  ];
 
   void _playVideo(String title, String videoUrl) {
     Navigator.push(
@@ -112,42 +101,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 3.5,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: mediaList.length,
-                  itemBuilder: (context, index) {
-                    final item = mediaList[index];
-                    return InkWell(
-                      onTap: () => _playVideo(item['title']!, item['url']!),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121A17),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.4)),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 26),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                item['title']!,
-                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 3.5,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  children: [
+                    _buildChannelCard('قناة الرياضة الحية 1', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+                    _buildChannelCard('قناة الرياضة الحية 2', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+                    _buildChannelCard('قناة الأخبار العالمية', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+                    _buildChannelCard('قناة الأفلام والمنوعات', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+                  ],
                 ),
               ),
             ],
@@ -181,6 +145,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icon(icon, color: const Color(0xFF00FF66), size: 18),
             const SizedBox(width: 8),
             Text(title, style: TextStyle(color: isSelected ? const Color(0xFF00FF66) : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChannelCard(String title, String url) {
+    return InkWell(
+      onTap: () => _playVideo(title, url),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF121A17),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF00FF66).withOpacity(0.4)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.play_circle_fill, color: Color(0xFF00FF66), size: 26),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),
