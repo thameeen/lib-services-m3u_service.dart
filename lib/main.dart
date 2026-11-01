@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
 void main() {
@@ -41,12 +39,12 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
-  bool isConnected = true; // تم ضبط الاتصال افتراضياً للعمل فوراً
+  bool isConnected = true;
 
   final Map<String, dynamic> serverData = {
     "app_name": "Heedar TV",
     "version": "1.0.0",
-    "notice": "حالة الحساب: نشط (Active)",
+    "notice": "حالة الحساب: نشط (Active) - Xtream Connected",
     "continue_watching": [
       {
         "title": "Big Buck Bunny",
@@ -336,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00FF66).وOpacity(0.2),
+                    color: const Color(0xFF00FF66).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text('HD', style: TextStyle(color: Color(0xFF00FF66), fontSize: 9, fontWeight: FontWeight.bold)),
