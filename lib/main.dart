@@ -42,13 +42,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String selectedCategory = 'movies';
-  bool isLoading = true;
   Map<String, dynamic>? serverData;
 
-  // رابط السيرفر السحابي (Raw URL الخاص بملف الـ JSON على جيت هاب)
-  // ضع رابط الـ Raw الخاص بملفك هنا:
+  // رابط السيرفر السحابي الخاص بك على GitHub
   final String serverJsonUrl = 'https://raw.githubusercontent.com/thameeen/lib-services-m3u_service.dart/refs/heads/main/heedar_server.json';
-
 
   @override
   void initState() {
@@ -56,20 +53,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _fetchServerData();
   }
 
-  // دالة جلب البيانات من السيرفر الخاص بك
   Future<void> _fetchServerData() async {
     try {
       final response = await http.get(Uri.parse(serverJsonUrl));
       if (response.statusCode == 200) {
         setState(() {
           serverData = json.decode(response.body);
-          isLoading = false;
         });
-      } else {
-        setState(() => isLoading = false);
       }
     } catch (e) {
-      setState(() => isLoading = false);
+      // في حال خطأ الاتصال، سيعتمد التطبيق على البيانات الافتراضية بسلاسة
     }
   }
 
@@ -255,14 +248,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // جلب القوائم من السيرفر أو استخدام قيم افتراضية في حال التحميل
-    List categories = serverData?['categories'] ?? [
-      {"id": "live", "title": "Live TV's", "subtitle": "+5000 Channels", "icon": "tv"},
-      {"id": "movies", "title": "Movies", "subtitle": "+12000 Movies", "icon": "movie"},
-      {"id": "series", "title": "Series", "subtitle": "+7000 Series", "icon": "video_library"}
+    // قائمة Continue Watching الافتراضية والجاهزة دائماً لمنع أي تعليق أو انتظار
+    List continueWatching = serverData?['continue_watching'] ?? [
+      {
+        "title": "Dark City Chronicles",
+        "subtitle": "Season 2 - Episode 8",
+        "poster_url": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500"
+      },
+      {
+        "title": "La Casa De Papel",
+        "subtitle": "Season 4 - Episode 3",
+        "poster_url": "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500"
+      },
+      {
+        "title": "Lilo & Stitch",
+        "subtitle": "2023",
+        "poster_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500"
+      }
     ];
-
-    List continueWatching = serverData?['continue_watching'] ?? [];
 
     return Scaffold(
       body: SafeArea(
@@ -312,25 +315,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
 
-              // الأقسام الرئيسية (تأتي من السيرفر)
+              // الأقسام الرئيسية
               Row(
                 children: [
                   Expanded(
                     flex: 2,
                     child: Row(
-                      children: categories.map<Widget>((cat) {
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: _buildCategoryCard(
-                              cat['title'],
-                              cat['subtitle'],
-                              cat['id'] == 'live' ? Icons.tv : (cat['id'] == 'movies' ? Icons.movie : Icons.video_library),
-                              cat['id'],
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children: [
+                        Expanded(child: _buildCategoryCard('Live TV\'s', '+5000 Channels', Icons.tv, 'LiveTV')),
+                        const SizedBox(width: 15),
+                        Expanded(child: _buildCategoryCard('Movies', '+12000 Movies', Icons.movie, 'Movies')),
+                        const SizedBox(width: 15),
+                        Expanded(child: _buildCategoryCard('Series', '+7000 Series', Icons.video_library, 'Series')),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -350,25 +347,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
 
-              // قسم متابعة المشاهدة (مع البوسترات القادمة من السيرفر)
+              // قسم متابعة المشاهدة
               const Text(
                 'Continue Watching',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 10),
               Row(
-                children: continueWatching.isNotEmpty
-                    ? continueWatching.map<Widget>((item) {
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: _buildContinueItem(item['title'], item['subtitle'], item['poster_url']),
-                          ),
-                        );
-                      }).toList()
-                    : [
-                        const Expanded(child: Center(child: CircularProgressIndicator(color: Color(0xFF00FF66))))
-                      ],
+                children: continueWatching.map<Widget>((item) {
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: _buildContinueItem(item['title'], item['subtitle'], item['poster_url']),
+                    ),
+                  );
+                }).toList(),
               ),
               const Spacer(),
 
