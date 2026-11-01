@@ -255,23 +255,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<Widget> _getMediaListForTab() {
-    // روابط فيديو سريعة وخفيفة تضمن الفتح الفوري بدون أي انتظار
     if (selectedMainTab == 'LiveTV') {
       return [
-        _buildChannelCard('قناة الرياضة الحية 1 [HD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
-        _buildChannelCard('قناة الرياضة الحية 2 [HD]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
-        _buildChannelCard('قناة الأخبار العالمية [FHD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
-        _buildChannelCard('قناة المنوعات العامة [HD]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 1 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        _buildChannelCard('قناة الرياضة الحية 2 [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('قناة الأخبار العالمية [FHD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('قناة المنوعات العامة [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
       ];
     } else if (selectedMainTab == 'Movies') {
       return [
-        _buildChannelCard('فيلم الحركة والمغامرة [4K]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
-        _buildChannelCard('فيلم الكوميديا والدراما [HD]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
+        _buildChannelCard('فيلم الحركة والمغامرة [4K]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        _buildChannelCard('فيلم الكوميديا والدراما [HD]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
       ];
     } else {
       return [
-        _buildChannelCard('مسلسل الحلقة الأولى [Ep 1]', 'https://www.w3schools.com/html/mov_bbb.mp4'),
-        _buildChannelCard('مسلسل الحلقة الثانية [Ep 2]', 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+        _buildChannelCard('مسلسل الحلقة الأولى [Ep 1]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'),
+        _buildChannelCard('مسلسل الحلقة الثانية [Ep 2]', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
       ];
     }
   }
@@ -318,6 +317,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -334,6 +334,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             _isInitialized = true;
           });
           _controller.play();
+          _controller.setLooping(true);
+        }
+      }).catchError((error) {
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+          });
         }
       });
   }
@@ -358,19 +365,21 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         iconTheme: const IconThemeData(color: Color(0xFF00FF66)),
       ),
       body: Center(
-        child: _isInitialized
-            ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              )
-            : const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Color(0xFF00FF66)),
-                  SizedBox(height: 15),
-                  Text('جاري بدء التشغيل...', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                ],
-              ),
+        child: _hasError
+            ? const Text('عذراً، حدث خطأ أثناء تحميل الفيديو', style: TextStyle(color: Colors.red, fontSize: 14))
+            : _isInitialized
+                ? AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  )
+                : const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: Color(0xFF00FF66)),
+                      SizedBox(height: 15),
+                      Text('جاري بدء التشغيل...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    ],
+                  ),
       ),
     );
   }
