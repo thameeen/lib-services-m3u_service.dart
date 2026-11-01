@@ -16,20 +16,16 @@ class HeedarTVApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F0F0F),
         primaryColor: Colors.greenAccent,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: Colors.greenAccent,
           secondary: Colors.greenAccent,
         ),
       ),
-      // تبدأ التطبيق بشاشة إعداد السيرفر وتسجيل الدخول الحقيقي
       home: const LoginServerScreen(),
     );
   }
 }
 
-// ==========================================
-// 1. شاشة إدخال بيانات السيرفر وتسجيل الدخول الفخمة
-// ==========================================
 class LoginServerScreen extends StatefulWidget {
   const LoginServerScreen({Key? key}) : super(key: key);
 
@@ -48,13 +44,11 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
       _isLoading = true;
     });
 
-    // محاكاة الاتصال بالسيرفر الحقيقي
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         _isLoading = false;
       });
 
-      // الانتقال للواجهة الرئيسية بعد نجاح الربط
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainHomeScreen()),
@@ -75,13 +69,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
               color: const Color(0xFF181818),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.greenAccent.withOpacity(0.3), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                )
-              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -98,8 +85,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 const SizedBox(height: 30),
-                
-                // حقل رابط السيرفر
                 TextField(
                   controller: _serverController,
                   style: const TextStyle(color: Colors.white),
@@ -113,8 +98,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                
-                // حقل اسم المستخدم
                 TextField(
                   controller: _userController,
                   style: const TextStyle(color: Colors.white),
@@ -128,8 +111,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                
-                // حقل كلمة المرور
                 TextField(
                   controller: _passController,
                   obscureText: true,
@@ -144,8 +125,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                
-                // زر الدخول والربط
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -154,7 +133,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
                       backgroundColor: Colors.greenAccent,
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 5,
                     ),
                     onPressed: _isLoading ? null : _connectToServer,
                     child: _isLoading
@@ -174,9 +152,6 @@ class _LoginServerScreenState extends State<LoginServerScreen> {
   }
 }
 
-// ==========================================
-// 2. الواجهة الرئيسية الكاملة للتطبيق
-// ==========================================
 class MainHomeScreen extends StatelessWidget {
   const MainHomeScreen({Key? key}) : super(key: key);
 
@@ -214,7 +189,6 @@ class MainHomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // أزرار الأقسام الرئيسية الثلاثة
             Row(
               children: [
                 Expanded(
@@ -258,13 +232,11 @@ class MainHomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 35),
-            
             const Text(
               'Continue Watching',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 15),
-            
             Row(
               children: [
                 Expanded(child: _buildMediaCard(title: "Dark City Chronicles", subtitle: "S2 - Ep 8", progress: 0.7)),
@@ -327,9 +299,6 @@ class MainHomeScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 3. شاشة البث المباشر (مع تفعيل المشغل الداخلي)
-// ==========================================
 class InternalLiveTvScreen extends StatelessWidget {
   const InternalLiveTvScreen({Key? key}) : super(key: key);
 
@@ -347,7 +316,6 @@ class InternalLiveTvScreen extends StatelessWidget {
             subtitle: const Text('Server Live Stream Ready', style: TextStyle(color: Colors.grey)),
             trailing: const Icon(Icons.play_circle_fill, color: Colors.greenAccent, size: 30),
             onTap: () {
-              // عند ربط السيرفر، هنا يمرر رابط البث الفعلي للمشغل
               Navigator.push(context, MaterialPageRoute(builder: (context) => const VideoPlayerScreen(videoUrl: "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4")));
             },
           );
@@ -357,9 +325,6 @@ class InternalLiveTvScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 4. شاشة الأفلام الداخلية
-// ==========================================
 class InternalMoviesScreen extends StatelessWidget {
   const InternalMoviesScreen({Key? key}) : super(key: key);
 
@@ -394,9 +359,6 @@ class InternalMoviesScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 5. شاشة المسلسلات الداخلية
-// ==========================================
 class InternalSeriesScreen extends StatelessWidget {
   const InternalSeriesScreen({Key? key}) : super(key: key);
 
@@ -431,9 +393,6 @@ class InternalSeriesScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 6. مشغل الفيديو الحقيقي (Video Player Screen)
-// ==========================================
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   const VideoPlayerScreen({Key? key, required this.videoUrl}) : super(key: key);
